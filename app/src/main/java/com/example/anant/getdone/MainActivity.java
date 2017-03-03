@@ -1,5 +1,6 @@
 package com.example.anant.getdone;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,12 +20,14 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
+    private final int REQUEST_CODE = 20;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        lvItems=(ListView) findViewById(R.id.lvItems);
         readItems();
+
+        lvItems=(ListView) findViewById(R.id.lvItems);
         itemsAdapter=new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,items);
         lvItems.setAdapter(itemsAdapter);
         setupListViewListener();
@@ -41,13 +44,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListViewListener() {
-        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                items.remove(position);
-                itemsAdapter.notifyDataSetChanged();
-                writeItems();
-                return true;
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i=new Intent(MainActivity.this,EditGetDone.class);
+                i.putExtra("position", position);
+                i.putExtra("text",items.get(position));
+                startActivityForResult(i, REQUEST_CODE);
             }
         });
     }
@@ -69,4 +72,22 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
+            String action=data.getStringExtra("action");
+            int pos=data.getIntExtra("position", items.size());
+                if (action.equals("save")) {
+                    items.set(pos, data.getStringExtra("text"));
+                    writeItems();
+                }
+                else {
+                    items.remove(pos);
+                    writeItems();
+                }
+        }
+        itemsAdapter.notifyDataSetChanged();
+    }
+
 }
